@@ -167,6 +167,20 @@ flowchart LR
 CREATE DATABASE personal_knowledge_base;
 ```
 
+连接到 `personal_knowledge_base` 数据库后，启用 pgvector 扩展：
+
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+```
+
+检查扩展是否启用成功：
+
+```sql
+SELECT extname, extversion
+FROM pg_extension
+WHERE extname = 'vector';
+```
+
 ### 配置环境变量
 
 复制示例配置：
