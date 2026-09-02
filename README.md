@@ -2,7 +2,7 @@
 
 一个计划基于 Spring Boot、PostgreSQL、pgvector 和 Spring AI 实现的个人知识库全栈应用。
 
-> 当前状态：需求设计与项目骨架阶段，业务功能尚未实现。
+> 当前状态：项目骨架与健康检查已经完成，其他业务模块将按照 Issue 逐步实现。
 
 ## 项目背景
 
@@ -155,4 +155,61 @@ flowchart LR
 
 ## 本地运行
 
-项目目前处于骨架搭建阶段，完整运行方式将在项目骨架和数据库模块完成后补充。
+### 环境要求
+
+- JDK 17
+- Maven 3.9+
+- PostgreSQL
+
+### 创建数据库
+
+```sql
+CREATE DATABASE personal_knowledge_base;
+```
+
+### 配置环境变量
+
+复制示例配置：
+
+```powershell
+Copy-Item .env.example .env
+```
+
+修改 `.env` 中的数据库密码：
+
+```properties
+DB_URL=jdbc:postgresql://localhost:5432/personal_knowledge_base
+DB_USERNAME=postgres
+DB_PASSWORD=replace-with-your-database-password
+```
+
+`.env` 已被 Git 忽略，不要把真实密码提交到仓库。
+
+### 启动应用
+
+```powershell
+mvn spring-boot:run
+```
+
+### 健康检查
+
+访问：
+
+```text
+http://localhost:8080/api/health
+```
+
+预期响应：
+
+```json
+{
+  "status": "UP",
+  "application": "personal-knowledge-base"
+}
+```
+
+### 运行测试
+
+```powershell
+mvn test
+```
