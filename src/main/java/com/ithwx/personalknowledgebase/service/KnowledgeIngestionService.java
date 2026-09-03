@@ -4,6 +4,8 @@ import com.ithwx.personalknowledgebase.entity.DocumentEntity;
 import com.ithwx.personalknowledgebase.repository.DocumentRepository;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.ai.vectorstore.filter.Filter;
+import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -43,6 +45,67 @@ public class KnowledgeIngestionService {
             String sourceUrl,
             String content
     ) {
+        PreparedContent prepared = prepare(name, sourceType, sourceUrl, content);
+
+        DocumentEntity entity = new DocumentEntity();
+        applyPreparedContent(entity, prepared);
+        entity = documentRepository.save(entity);
+
+        return storeVectors(entity, prepared.chunks(), false);
+    }
+
+    public DocumentEntity replace(
+            DocumentEntity entity,
+            String name,
+            String sourceType,
+            String sourceUrl,
+            String content
+    ) {
+        if (entity == null || entity.getId() == null) {
+            throw new IllegalArgumentException("待更新资料不能为空");
+        }
+
+        PreparedContent prepared = prepare(name, sourceType, sourceUrl, content);
+        applyPreparedContent(entity, prepared);
+        documentRepository.save(entity);
+
+        return storeVectors(entity, prepared.chunks(), true);
+    }
+
+    public void deleteVectors(Long documentId) {
+        if (documentId == null) {
+            throw new IllegalArgumentException("资料 ID 不能为空");
+        }
+        vectorStore.delete(documentFilter(documentId));
+    }
+
+    private DocumentEntity storeVectors(
+            DocumentEntity entity,
+            List<String> chunks,
+            boolean deleteExisting
+    ) {
+        try {
+            if (deleteExisting) {
+                deleteVectors(entity.getId());
+            }
+            vectorStore.add(toVectorDocuments(entity, chunks));
+            entity.setStatus(STATUS_READY);
+            entity.setChunkCount(chunks.size());
+            return documentRepository.save(entity);
+        } catch (RuntimeException exception) {
+            entity.setStatus(STATUS_FAILED);
+            entity.setChunkCount(0);
+            documentRepository.save(entity);
+            throw new IllegalStateException("资料入库失败：" + entity.getName(), exception);
+        }
+    }
+
+    private PreparedContent prepare(
+            String name,
+            String sourceType,
+            String sourceUrl,
+            String content
+    ) {
         String normalizedName = requireText(name, "资料名称", 255);
         String normalizedType = requireText(sourceType, "资料类型", 32)
                 .toLowerCase(Locale.ROOT);
@@ -57,26 +120,31 @@ public class KnowledgeIngestionService {
             throw new IllegalArgumentException("资料正文切分后不能为空");
         }
 
-        DocumentEntity entity = new DocumentEntity();
-        entity.setName(normalizedName);
-        entity.setFileType(normalizedType);
-        entity.setSourceUrl(normalizedUrl.isEmpty() ? null : normalizedUrl);
-        entity.setContentHash(sha256(content));
+        return new PreparedContent(
+                normalizedName,
+                normalizedType,
+                normalizedUrl,
+                sha256(content),
+                chunks
+        );
+    }
+
+    private void applyPreparedContent(
+            DocumentEntity entity,
+            PreparedContent prepared
+    ) {
+        entity.setName(prepared.name());
+        entity.setFileType(prepared.sourceType());
+        entity.setSourceUrl(prepared.sourceUrl().isEmpty() ? null : prepared.sourceUrl());
+        entity.setContentHash(prepared.contentHash());
         entity.setStatus(STATUS_PROCESSING);
         entity.setChunkCount(0);
-        entity = documentRepository.save(entity);
+    }
 
-        try {
-            vectorStore.add(toVectorDocuments(entity, chunks));
-            entity.setStatus(STATUS_READY);
-            entity.setChunkCount(chunks.size());
-            return documentRepository.save(entity);
-        } catch (RuntimeException exception) {
-            entity.setStatus(STATUS_FAILED);
-            entity.setChunkCount(0);
-            documentRepository.save(entity);
-            throw new IllegalStateException("资料入库失败：" + normalizedName, exception);
-        }
+    private Filter.Expression documentFilter(Long documentId) {
+        return new FilterExpressionBuilder()
+                .eq("documentId", String.valueOf(documentId))
+                .build();
     }
 
     private List<Document> toVectorDocuments(
@@ -135,5 +203,14 @@ public class KnowledgeIngestionService {
         } catch (NoSuchAlgorithmException exception) {
             throw new IllegalStateException("当前环境不支持 SHA-256", exception);
         }
+    }
+
+    private record PreparedContent(
+            String name,
+            String sourceType,
+            String sourceUrl,
+            String contentHash,
+            List<String> chunks
+    ) {
     }
 }

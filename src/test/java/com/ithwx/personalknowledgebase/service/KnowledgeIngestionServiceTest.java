@@ -10,11 +10,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.ai.vectorstore.filter.Filter;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -135,6 +137,53 @@ class KnowledgeIngestionServiceTest {
 
         verify(documentRepository, never()).save(any(DocumentEntity.class));
         verify(vectorStore, never()).add(anyList());
+    }
+
+    @Test
+    void shouldReplaceOldVectorsAndKeepDocumentId() {
+        stubRepositorySave();
+        DocumentEntity entity = new DocumentEntity();
+        entity.setId(42L);
+        entity.setName("旧名称");
+        entity.setFileType("note");
+        entity.setContentHash("old-hash");
+        entity.setStatus("READY");
+        entity.setChunkCount(1);
+        when(chunkingService.chunk("更新后的正文"))
+                .thenReturn(List.of("更新块一", "更新块二"));
+
+        DocumentEntity result = service.replace(
+                entity,
+                "新名称",
+                "note",
+                null,
+                "更新后的正文"
+        );
+
+        assertEquals(42L, result.getId());
+        assertEquals("新名称", result.getName());
+        assertEquals("READY", result.getStatus());
+        assertEquals(2, result.getChunkCount());
+        assertNotEquals("old-hash", result.getContentHash());
+        verify(vectorStore).delete(any(Filter.Expression.class));
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Document>> documentsCaptor =
+                ArgumentCaptor.forClass(List.class);
+        verify(vectorStore).add(documentsCaptor.capture());
+        List<Document> documents = documentsCaptor.getValue();
+        assertEquals(2, documents.size());
+        assertEquals("42", documents.get(0).getMetadata().get("documentId"));
+        assertEquals("新名称", documents.get(0).getMetadata().get("documentName"));
+        verify(documentRepository, times(2)).save(entity);
+    }
+
+    @Test
+    void shouldDeleteVectorsByDocumentId() {
+        service.deleteVectors(42L);
+
+        verify(vectorStore).delete(any(Filter.Expression.class));
+        verifyNoInteractions(chunkingService, documentRepository);
     }
 
     private void stubRepositorySave() {

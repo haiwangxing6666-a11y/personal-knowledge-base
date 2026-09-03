@@ -1,6 +1,7 @@
 package com.ithwx.personalknowledgebase.controller;
 
 import com.ithwx.personalknowledgebase.dto.DocumentResponse;
+import com.ithwx.personalknowledgebase.dto.DocumentUpdateRequest;
 import com.ithwx.personalknowledgebase.dto.LinkCreateRequest;
 import com.ithwx.personalknowledgebase.dto.NoteCreateRequest;
 import com.ithwx.personalknowledgebase.service.DocumentManagementService;
@@ -8,7 +9,10 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -56,5 +60,29 @@ public class DocumentController {
         return documentManagementService.list().stream()
                 .map(DocumentResponse::from)
                 .toList();
+    }
+
+    @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public DocumentResponse update(
+            @PathVariable Long id,
+            @Valid @RequestBody DocumentUpdateRequest request
+    ) {
+        return DocumentResponse.from(
+                documentManagementService.update(id, request.name(), request.content())
+        );
+    }
+
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public DocumentResponse replaceFile(
+            @PathVariable Long id,
+            @RequestPart("file") MultipartFile file
+    ) throws IOException {
+        return DocumentResponse.from(documentManagementService.replaceFile(id, file));
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        documentManagementService.delete(id);
     }
 }

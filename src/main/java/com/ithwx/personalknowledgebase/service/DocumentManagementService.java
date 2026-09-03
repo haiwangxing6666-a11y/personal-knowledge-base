@@ -75,6 +75,47 @@ public class DocumentManagementService {
         return documentRepository.findAllByOrderByUploadTimeDesc();
     }
 
+    public DocumentEntity update(Long id, String name, String content) {
+        DocumentEntity entity = requireDocument(id);
+        return knowledgeIngestionService.replace(
+                entity,
+                name,
+                entity.getFileType(),
+                entity.getSourceUrl(),
+                content
+        );
+    }
+
+    public DocumentEntity replaceFile(Long id, MultipartFile file) throws IOException {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("请选择非空文件");
+        }
+
+        DocumentEntity entity = requireDocument(id);
+        String fileName = resolveFileName(file.getOriginalFilename());
+        String fileType = resolveFileType(fileName);
+        String content = documentParserService.parse(file);
+
+        return knowledgeIngestionService.replace(
+                entity,
+                fileName,
+                fileType,
+                null,
+                content
+        );
+    }
+
+    public void delete(Long id) {
+        DocumentEntity entity = requireDocument(id);
+        knowledgeIngestionService.deleteVectors(entity.getId());
+        documentRepository.delete(entity);
+    }
+
+    private DocumentEntity requireDocument(Long id) {
+        return documentRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("资料不存在：" + id));
+    }
+
     private String resolveFileName(String originalFileName) {
         if (!StringUtils.hasText(originalFileName)) {
             throw new IllegalArgumentException("无法识别文件名");
