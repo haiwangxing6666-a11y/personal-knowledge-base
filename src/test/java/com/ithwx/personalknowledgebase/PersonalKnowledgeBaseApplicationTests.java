@@ -1,6 +1,7 @@
 package com.ithwx.personalknowledgebase;
 
 import com.ithwx.personalknowledgebase.repository.DocumentRepository;
+import com.ithwx.personalknowledgebase.service.KnowledgeIngestionService;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -22,6 +23,9 @@ class PersonalKnowledgeBaseApplicationTests {
     private VectorStore vectorStore;
 
     @Autowired
+    private KnowledgeIngestionService knowledgeIngestionService;
+
+    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     @MockitoBean
@@ -32,6 +36,7 @@ class PersonalKnowledgeBaseApplicationTests {
         assertNotNull(documentRepository);
         assertNotNull(vectorStore);
         assertNotNull(embeddingModel);
+        assertNotNull(knowledgeIngestionService);
     }
 
     @Test
