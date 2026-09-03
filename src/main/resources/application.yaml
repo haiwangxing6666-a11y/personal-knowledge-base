@@ -16,6 +16,25 @@ spring:
     hibernate:
       ddl-auto: update
 
+  ai:
+    model:
+      chat: none
+      embedding: openai
+    openai:
+      api-key: ${SILICONFLOW_API_KEY:replace-with-your-api-key}
+      base-url: ${SILICONFLOW_BASE_URL:https://api.siliconflow.cn/v1}
+      embedding:
+        model: ${EMBEDDING_MODEL:BAAI/bge-m3}
+    vectorstore:
+      pgvector:
+        initialize-schema: true
+        schema-name: public
+        table-name: vector_store
+        dimensions: ${EMBEDDING_DIMENSIONS:1024}
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        remove-existing-vector-store-table: false
+
 server:
   port: 8080
 

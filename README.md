@@ -189,15 +189,23 @@ WHERE extname = 'vector';
 Copy-Item .env.example .env
 ```
 
-修改 `.env` 中的数据库密码：
+修改 `.env` 中的数据库密码和 SiliconFlow API 密钥：
 
 ```properties
 DB_URL=jdbc:postgresql://localhost:5432/personal_knowledge_base
 DB_USERNAME=postgres
 DB_PASSWORD=replace-with-your-database-password
+
+SILICONFLOW_API_KEY=replace-with-your-api-key
+SILICONFLOW_BASE_URL=https://api.siliconflow.cn/v1
+EMBEDDING_MODEL=BAAI/bge-m3
+EMBEDDING_DIMENSIONS=1024
 ```
 
 `.env` 已被 Git 忽略，不要把真实密码提交到仓库。
+
+应用启动时会初始化 `vector_store` 表。单元测试会使用 Mock Embedding 模型，
+不会向真实模型服务发送请求。
 
 ### 启动应用
 
