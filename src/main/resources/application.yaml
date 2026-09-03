@@ -39,6 +39,9 @@ server:
   port: 8080
 
 app:
+  rag:
+    top-k: 5
+    similarity-threshold: 0.55
   chunk:
     max-chars: 500
     overlap-chars: 50

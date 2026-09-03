@@ -3,6 +3,7 @@ package com.ithwx.personalknowledgebase;
 import com.ithwx.personalknowledgebase.repository.DocumentRepository;
 import com.ithwx.personalknowledgebase.service.DocumentManagementService;
 import com.ithwx.personalknowledgebase.service.KnowledgeIngestionService;
+import com.ithwx.personalknowledgebase.service.RagRetrievalService;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -30,6 +31,9 @@ class PersonalKnowledgeBaseApplicationTests {
     private DocumentManagementService documentManagementService;
 
     @Autowired
+    private RagRetrievalService ragRetrievalService;
+
+    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     @MockitoBean
@@ -42,6 +46,7 @@ class PersonalKnowledgeBaseApplicationTests {
         assertNotNull(embeddingModel);
         assertNotNull(knowledgeIngestionService);
         assertNotNull(documentManagementService);
+        assertNotNull(ragRetrievalService);
     }
 
     @Test
