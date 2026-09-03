@@ -4,7 +4,10 @@ import com.ithwx.personalknowledgebase.repository.DocumentRepository;
 import com.ithwx.personalknowledgebase.service.DocumentManagementService;
 import com.ithwx.personalknowledgebase.service.KnowledgeIngestionService;
 import com.ithwx.personalknowledgebase.service.RagRetrievalService;
+import com.ithwx.personalknowledgebase.service.QuestionRewriteService;
+import com.ithwx.personalknowledgebase.service.TwoStageRetrievalService;
 import org.junit.jupiter.api.Test;
+import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,10 +37,19 @@ class PersonalKnowledgeBaseApplicationTests {
     private RagRetrievalService ragRetrievalService;
 
     @Autowired
+    private QuestionRewriteService questionRewriteService;
+
+    @Autowired
+    private TwoStageRetrievalService twoStageRetrievalService;
+
+    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     @MockitoBean
     private EmbeddingModel embeddingModel;
+
+    @MockitoBean
+    private ChatModel chatModel;
 
     @Test
     void contextLoads() {
@@ -47,6 +59,9 @@ class PersonalKnowledgeBaseApplicationTests {
         assertNotNull(knowledgeIngestionService);
         assertNotNull(documentManagementService);
         assertNotNull(ragRetrievalService);
+        assertNotNull(questionRewriteService);
+        assertNotNull(twoStageRetrievalService);
+        assertNotNull(chatModel);
     }
 
     @Test
