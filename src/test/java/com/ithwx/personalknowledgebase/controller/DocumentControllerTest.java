@@ -20,8 +20,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -116,6 +118,51 @@ class DocumentControllerTest {
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].name").value("学习笔记"))
                 .andExpect(jsonPath("$[1].name").value("资料.txt"));
+    }
+
+    @Test
+    void shouldUpdateDocumentContent() throws Exception {
+        when(documentManagementService.update(2L, "新名称", "新正文"))
+                .thenReturn(document(2L, "新名称", "note", null));
+
+        mockMvc.perform(put("/api/documents/{id}", 2L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name":"新名称","content":"新正文"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(2))
+                .andExpect(jsonPath("$.name").value("新名称"));
+    }
+
+    @Test
+    void shouldReplaceDocumentWithFile() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "新文件.md",
+                "text/markdown",
+                "# 新正文".getBytes(StandardCharsets.UTF_8)
+        );
+        when(documentManagementService.replaceFile(1L, file))
+                .thenReturn(document(1L, "新文件.md", "md", null));
+
+        mockMvc.perform(multipart("/api/documents/{id}", 1L)
+                        .file(file)
+                        .with(request -> {
+                            request.setMethod("PUT");
+                            return request;
+                        }))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.fileType").value("md"));
+    }
+
+    @Test
+    void shouldDeleteDocument() throws Exception {
+        mockMvc.perform(delete("/api/documents/{id}", 5L))
+                .andExpect(status().isNoContent());
+
+        verify(documentManagementService).delete(5L);
     }
 
     private DocumentEntity document(

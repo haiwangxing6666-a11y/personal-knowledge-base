@@ -7,16 +7,19 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.InOrder;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -133,6 +136,78 @@ class DocumentManagementServiceTest {
                 org.mockito.ArgumentMatchers.any(),
                 org.mockito.ArgumentMatchers.any()
         );
+    }
+
+    @Test
+    void shouldUpdateDocumentAndPreserveSourceInformation() {
+        DocumentEntity existing = document(3L, "旧网页", "web");
+        existing.setSourceUrl("https://example.com/old");
+        when(documentRepository.findById(3L)).thenReturn(Optional.of(existing));
+        when(knowledgeIngestionService.replace(
+                existing,
+                "新网页",
+                "web",
+                existing.getSourceUrl(),
+                "更新正文"
+        )).thenReturn(existing);
+
+        DocumentEntity result = service.update(3L, "新网页", "更新正文");
+
+        assertSame(existing, result);
+        verify(knowledgeIngestionService).replace(
+                existing,
+                "新网页",
+                "web",
+                "https://example.com/old",
+                "更新正文"
+        );
+    }
+
+    @Test
+    void shouldReplaceExistingContentWithUploadedFile() throws Exception {
+        DocumentEntity existing = document(4L, "旧文件.txt", "txt");
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "新文件.MD",
+                "text/markdown",
+                "# 新正文".getBytes(StandardCharsets.UTF_8)
+        );
+        when(documentRepository.findById(4L)).thenReturn(Optional.of(existing));
+        when(documentParserService.parse(file)).thenReturn("# 新正文");
+        when(knowledgeIngestionService.replace(
+                existing, "新文件.MD", "md", null, "# 新正文"
+        )).thenReturn(existing);
+
+        DocumentEntity result = service.replaceFile(4L, file);
+
+        assertSame(existing, result);
+        verify(knowledgeIngestionService).replace(
+                existing, "新文件.MD", "md", null, "# 新正文"
+        );
+    }
+
+    @Test
+    void shouldDeleteVectorsBeforeDocumentRecord() {
+        DocumentEntity existing = document(5L, "待删除资料", "note");
+        when(documentRepository.findById(5L)).thenReturn(Optional.of(existing));
+
+        service.delete(5L);
+
+        InOrder inOrder = inOrder(knowledgeIngestionService, documentRepository);
+        inOrder.verify(knowledgeIngestionService).deleteVectors(5L);
+        inOrder.verify(documentRepository).delete(existing);
+    }
+
+    @Test
+    void shouldRejectMissingDocument() {
+        when(documentRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.update(99L, "资料", "正文")
+        );
+
+        verifyNoInteractions(knowledgeIngestionService);
     }
 
     private DocumentEntity document(Long id, String name, String fileType) {
