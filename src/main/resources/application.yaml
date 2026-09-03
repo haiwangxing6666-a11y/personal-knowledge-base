@@ -23,3 +23,7 @@ app:
   chunk:
     max-chars: 500
     overlap-chars: 50
+  web:
+    connect-timeout-seconds: 5
+    request-timeout-seconds: 10
+    max-content-bytes: 2097152
