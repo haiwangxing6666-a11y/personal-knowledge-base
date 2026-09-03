@@ -18,13 +18,16 @@ spring:
 
   ai:
     model:
-      chat: none
+      chat: openai
       embedding: openai
     openai:
       api-key: ${SILICONFLOW_API_KEY:replace-with-your-api-key}
       base-url: ${SILICONFLOW_BASE_URL:https://api.siliconflow.cn/v1}
       embedding:
         model: ${EMBEDDING_MODEL:BAAI/bge-m3}
+      chat:
+        options:
+          model: ${CHAT_MODEL:Qwen/Qwen3-8B}
     vectorstore:
       pgvector:
         initialize-schema: true
@@ -42,6 +45,7 @@ app:
   rag:
     top-k: 5
     similarity-threshold: 0.55
+    retry-min-hits: 2
   chunk:
     max-chars: 500
     overlap-chars: 50
