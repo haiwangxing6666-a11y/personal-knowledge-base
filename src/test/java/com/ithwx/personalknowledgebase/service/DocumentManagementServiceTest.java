@@ -2,6 +2,7 @@ package com.ithwx.personalknowledgebase.service;
 
 import com.ithwx.personalknowledgebase.dto.WebPage;
 import com.ithwx.personalknowledgebase.entity.DocumentEntity;
+import com.ithwx.personalknowledgebase.exception.ResourceNotFoundException;
 import com.ithwx.personalknowledgebase.repository.DocumentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -203,7 +204,7 @@ class DocumentManagementServiceTest {
         when(documentRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThrows(
-                IllegalArgumentException.class,
+                ResourceNotFoundException.class,
                 () -> service.update(99L, "资料", "正文")
         );
 
