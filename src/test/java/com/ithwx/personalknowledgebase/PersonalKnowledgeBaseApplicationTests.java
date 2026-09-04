@@ -4,6 +4,7 @@ import com.ithwx.personalknowledgebase.repository.DocumentRepository;
 import com.ithwx.personalknowledgebase.service.DocumentManagementService;
 import com.ithwx.personalknowledgebase.service.KnowledgeIngestionService;
 import com.ithwx.personalknowledgebase.service.RagRetrievalService;
+import com.ithwx.personalknowledgebase.service.RagAnswerService;
 import com.ithwx.personalknowledgebase.service.QuestionRewriteService;
 import com.ithwx.personalknowledgebase.service.TwoStageRetrievalService;
 import org.junit.jupiter.api.Test;
@@ -43,6 +44,9 @@ class PersonalKnowledgeBaseApplicationTests {
     private TwoStageRetrievalService twoStageRetrievalService;
 
     @Autowired
+    private RagAnswerService ragAnswerService;
+
+    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     @MockitoBean
@@ -61,6 +65,7 @@ class PersonalKnowledgeBaseApplicationTests {
         assertNotNull(ragRetrievalService);
         assertNotNull(questionRewriteService);
         assertNotNull(twoStageRetrievalService);
+        assertNotNull(ragAnswerService);
         assertNotNull(chatModel);
     }
 
