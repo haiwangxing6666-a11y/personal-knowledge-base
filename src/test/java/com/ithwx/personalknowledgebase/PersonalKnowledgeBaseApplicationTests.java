@@ -17,9 +17,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 class PersonalKnowledgeBaseApplicationTests {
@@ -55,6 +61,9 @@ class PersonalKnowledgeBaseApplicationTests {
     private GlobalExceptionHandler globalExceptionHandler;
 
     @Autowired
+    private WebApplicationContext webApplicationContext;
+
+    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     @MockitoBean
@@ -83,6 +92,17 @@ class PersonalKnowledgeBaseApplicationTests {
     void shouldKeepDocumentAndInitializeVectorStoreTables() {
         assertEquals(1, tableCount("document"));
         assertEquals(1, tableCount("vector_store"));
+    }
+
+    @Test
+    void shouldServeDocumentManagementPage() throws Exception {
+        MockMvc mockMvc = MockMvcBuilders
+                .webAppContextSetup(webApplicationContext)
+                .build();
+
+        mockMvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(forwardedUrl("index.html"));
     }
 
     private Integer tableCount(String tableName) {
