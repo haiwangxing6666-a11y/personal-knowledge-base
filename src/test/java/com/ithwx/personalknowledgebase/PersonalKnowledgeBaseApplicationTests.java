@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -103,6 +104,19 @@ class PersonalKnowledgeBaseApplicationTests {
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
                 .andExpect(forwardedUrl("index.html"));
+    }
+
+    @Test
+    void shouldServeKnowledgeChatPage() throws Exception {
+        MockMvc mockMvc = MockMvcBuilders
+                .webAppContextSetup(webApplicationContext)
+                .build();
+
+        mockMvc.perform(get("/chat.html"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(
+                        org.hamcrest.Matchers.containsString("id=\"chat-empty\"")
+                ));
     }
 
     private Integer tableCount(String tableName) {

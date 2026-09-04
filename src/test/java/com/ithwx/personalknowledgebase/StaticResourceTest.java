@@ -21,6 +21,19 @@ class StaticResourceTest {
         assertTrue(script.contains("fieldErrors"));
     }
 
+    @Test
+    void shouldProvideKnowledgeChatPageAndScript() throws Exception {
+        String page = read("static/chat.html");
+        String script = read("static/js/chat.js");
+
+        assertTrue(page.contains("向你的知识岛提问"));
+        assertTrue(page.contains("/js/chat.js"));
+        assertTrue(script.contains("/api/chat"));
+        assertTrue(script.contains("secondSearchExecuted"));
+        assertTrue(script.contains("sourceUrl"));
+        assertTrue(script.contains("event.shiftKey"));
+    }
+
     private String read(String path) throws Exception {
         ClassPathResource resource = new ClassPathResource(path);
         assertTrue(resource.exists());
