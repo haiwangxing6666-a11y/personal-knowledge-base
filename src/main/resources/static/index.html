@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Personal Knowledge Base 个人知识库资料管理页面">
+    <title>知屿 · 个人知识库</title>
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div class="app-shell">
+    <header class="topbar">
+        <a class="brand" href="/" aria-label="知屿首页">
+            <span class="brand-mark" aria-hidden="true">知</span>
+            <span>
+                <strong>知屿</strong>
+                <small>PERSONAL KNOWLEDGE BASE</small>
+            </span>
+        </a>
+        <nav class="nav-tabs" aria-label="主要导航">
+            <a class="nav-link active" href="/">资料管理</a>
+            <span class="nav-link disabled" title="问答页面将在下一模块开放">知识问答</span>
+        </nav>
+        <div class="service-state" id="service-state" title="后端服务状态">
+            <span class="status-dot"></span>
+            <span id="service-state-text">正在连接</span>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero" aria-labelledby="page-title">
+            <div class="hero-copy">
+                <p class="eyebrow">YOUR SECOND BRAIN</p>
+                <h1 id="page-title">把散落的知识，<br><span>收进一座岛屿。</span></h1>
+                <p class="hero-description">
+                    上传文档、记录灵感、收藏网页。系统会自动解析、切分并建立向量索引，
+                    为之后的知识库问答做好准备。
+                </p>
+            </div>
+            <div class="stats-panel" aria-label="知识库统计">
+                <div class="stat-card">
+                    <span class="stat-icon blue" aria-hidden="true">▤</span>
+                    <div><strong id="total-count">0</strong><span>全部资料</span></div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon green" aria-hidden="true">✓</span>
+                    <div><strong id="ready-count">0</strong><span>已完成索引</span></div>
+                </div>
+                <div class="stat-card wide">
+                    <span class="stat-icon amber" aria-hidden="true">◫</span>
+                    <div><strong id="chunk-count">0</strong><span>知识片段</span></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="workspace" aria-labelledby="add-resource-title">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">ADD KNOWLEDGE</p>
+                    <h2 id="add-resource-title">添加新资料</h2>
+                </div>
+                <p>选择一种方式，将内容收录到你的知识库</p>
+            </div>
+
+            <div class="composer-card">
+                <div class="composer-tabs" role="tablist" aria-label="资料添加方式">
+                    <button class="composer-tab active" type="button" role="tab" aria-selected="true" data-tab="file">
+                        <span aria-hidden="true">↑</span> 上传文件
+                    </button>
+                    <button class="composer-tab" type="button" role="tab" aria-selected="false" data-tab="note">
+                        <span aria-hidden="true">✎</span> 创建笔记
+                    </button>
+                    <button class="composer-tab" type="button" role="tab" aria-selected="false" data-tab="link">
+                        <span aria-hidden="true">↗</span> 收藏网页
+                    </button>
+                </div>
+
+                <div class="tab-panel active" id="panel-file" role="tabpanel">
+                    <form id="file-form">
+                        <label class="drop-zone" id="drop-zone" for="file-input">
+                            <input id="file-input" name="file" type="file" accept=".txt,.md,.markdown,.pdf,.docx" required>
+                            <span class="upload-symbol" aria-hidden="true">↑</span>
+                            <strong id="file-label">拖放文件到这里，或点击选择</strong>
+                            <span>支持 TXT、Markdown、PDF、DOCX</span>
+                        </label>
+                        <div class="form-actions">
+                            <span class="form-hint">文件会被自动解析并生成向量索引</span>
+                            <button class="primary-button" type="submit">上传并入库</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="tab-panel" id="panel-note" role="tabpanel" hidden>
+                    <form id="note-form" class="stacked-form">
+                        <label>
+                            <span>笔记标题</span>
+                            <input name="title" type="text" maxlength="255" placeholder="例如：Spring AI 学习笔记" required>
+                        </label>
+                        <label>
+                            <span>笔记正文</span>
+                            <textarea name="content" rows="7" placeholder="写下值得被检索的内容……" required></textarea>
+                        </label>
+                        <div class="form-actions">
+                            <span class="form-hint">保存后即可参与知识库检索</span>
+                            <button class="primary-button" type="submit">保存笔记</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="tab-panel" id="panel-link" role="tabpanel" hidden>
+                    <form id="link-form" class="stacked-form">
+                        <label>
+                            <span>网页地址</span>
+                            <input name="url" type="url" maxlength="2048" placeholder="https://example.com/article" required>
+                        </label>
+                        <label>
+                            <span>自定义标题 <em>选填</em></span>
+                            <input name="title" type="text" maxlength="255" placeholder="留空时自动使用网页标题">
+                        </label>
+                        <div class="form-actions">
+                            <span class="form-hint">仅支持可公开访问的 HTTP/HTTPS 网页</span>
+                            <button class="primary-button" type="submit">抓取并收藏</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <section class="library" aria-labelledby="library-title">
+            <div class="section-heading library-heading">
+                <div>
+                    <p class="eyebrow">YOUR LIBRARY</p>
+                    <h2 id="library-title">我的资料</h2>
+                </div>
+                <button class="ghost-button" id="refresh-button" type="button" aria-label="刷新资料列表">↻ 刷新</button>
+            </div>
+
+            <div class="library-state" id="loading-state">
+                <span class="spinner" aria-hidden="true"></span>
+                <span>正在加载资料……</span>
+            </div>
+            <div class="library-state empty-state" id="empty-state" hidden>
+                <span class="empty-illustration" aria-hidden="true">◇</span>
+                <strong>知识岛还是空的</strong>
+                <p>从上方上传第一份文件、笔记或网页吧。</p>
+            </div>
+            <div class="document-grid" id="document-list" aria-live="polite"></div>
+        </section>
+    </main>
+
+    <footer>
+        <span>知屿 Personal Knowledge Base</span>
+        <span>Spring Boot · PostgreSQL · pgvector · Spring AI</span>
+    </footer>
+</div>
+
+<dialog class="confirm-dialog" id="delete-dialog">
+    <form method="dialog">
+        <span class="dialog-icon" aria-hidden="true">!</span>
+        <h2>删除这份资料？</h2>
+        <p>“<strong id="delete-name"></strong>”及其向量索引会被一并删除，此操作无法撤销。</p>
+        <div class="dialog-actions">
+            <button class="ghost-button" value="cancel">取消</button>
+            <button class="danger-button" id="confirm-delete" value="confirm">确认删除</button>
+        </div>
+    </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="/js/app.js" defer></script>
+</body>
+</html>
