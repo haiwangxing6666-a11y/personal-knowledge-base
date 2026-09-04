@@ -1,237 +1,179 @@
-# Personal Knowledge Base
+# 知屿 · Personal Knowledge Base
 
-一个计划基于 Spring Boot、PostgreSQL、pgvector 和 Spring AI 实现的个人知识库全栈应用。
+一个基于 Spring Boot、PostgreSQL、pgvector 和 Spring AI 的个人知识库全栈应用。用户可以收录文件、笔记和网页，并通过带来源追踪的 RAG 问答检索自己的知识。
 
-> 当前状态：项目骨架与健康检查已经完成，其他业务模块将按照 Issue 逐步实现。
+当前版本已经完成从“资料进入知识库”到“基于证据回答”的完整闭环，并提供资料管理和知识问答 Web 页面。
 
-## 项目背景
+## 核心能力
 
-个人的课程资料、笔记和网页收藏通常分散在不同位置。资料不断积累后，传统文件夹和收藏夹难以支持快速检索和知识复用。
+- 解析 TXT、Markdown、PDF 和 DOCX 文件，支持大写扩展名。
+- 创建文本笔记，抓取公开网页正文。
+- 按段落切分文本，并为相邻文本块保留重叠内容。
+- 使用 Spring AI 生成 Embedding，写入 PostgreSQL + pgvector。
+- 更新或删除资料时同步更新向量数据。
+- 根据相似度检索和过滤知识片段。
+- 首次检索结果不足时改写问题并执行第二次检索。
+- 只根据检索证据生成回答，返回资料来源；无可靠依据时拒答。
+- 提供统一的 API 异常响应。
+- 提供响应式资料管理和知识问答页面。
 
-本项目希望建立一套完整流程，让用户能够统一收录资料，并通过自然语言从知识库中获取带有来源依据的回答。
-
-## 项目目标
-
-计划实现以下完整业务闭环：
-
-```text
-上传文件 / 创建笔记 / 收藏网页
-    → 正文解析
-    → 文本切分
-    → Embedding 向量化
-    → PostgreSQL + pgvector 入库
-    → 用户提问
-    → 检索与过滤
-    → 必要时改写问题并二次检索
-    → 回答、来源展示或无依据拒答
-```
-
-## 核心功能规划
-
-- 收录 PDF、TXT、Markdown 和 DOCX 文件。
-- 创建纯文本笔记。
-- 抓取公开网页正文。
-- 查看、更新和删除资料。
-- 将资料切分、向量化并写入 pgvector。
-- 基于知识库内容进行 RAG 问答。
-- 首次检索不足时改写问题并二次检索。
-- 返回回答使用的资料和原文片段。
-- 知识库没有可靠依据时拒绝回答。
-- 资料更新和删除后同步更新向量数据。
-- 提供 Web 管理和问答页面。
-
-## 用户流程
+## 业务闭环
 
 ```mermaid
 flowchart LR
-    A[文件、笔记、网页] --> B[正文解析]
+    A[文件 / 笔记 / 网页] --> B[正文解析]
     B --> C[文本切分]
-    C --> D[向量化]
+    C --> D[Embedding]
     D --> E[(PostgreSQL + pgvector)]
-
-    Q[用户提问] --> R[向量检索]
+    Q[用户提问] --> R[首次检索与过滤]
     E --> R
-    R --> F[相关性过滤]
-    F --> G{依据是否充足}
-    G -- 否 --> H[改写问题并二次检索]
-    H --> I[合并与去重]
-    G -- 是 --> I
+    R --> G{依据是否充足}
+    G -- 否 --> H[问题改写与二次检索]
+    G -- 是 --> I[合并证据]
+    H --> I
     I --> J{是否有可靠依据}
-    J -- 否 --> K[拒绝回答]
-    J -- 是 --> L[回答并展示来源]
+    J -- 否 --> K[明确拒答]
+    J -- 是 --> L[回答与来源追踪]
 ```
 
 ## 技术栈
 
-| 类型 | 计划使用的技术 |
+| 分类 | 技术 |
 |---|---|
-| 开发语言 | Java 17 |
-| 后端框架 | Spring Boot |
-| Web | Spring Web MVC |
-| 参数校验 | Jakarta Validation |
-| 数据访问 | Spring Data JPA |
-| 关系型数据库 | PostgreSQL |
-| 向量存储 | PostgreSQL + pgvector |
-| AI 接入 | Spring AI |
-| 项目管理 | Maven |
-| 前端 | HTML、CSS、JavaScript |
-| 测试 | JUnit 5、Mockito |
-| API 文档 | OpenAPI、Swagger |
-| CI | GitHub Actions |
+| 语言与构建 | Java 17、Maven 3.9+ |
+| Web | Spring Boot 4.1.1、Spring Web MVC、Jakarta Validation |
+| 数据 | Spring Data JPA、PostgreSQL、pgvector |
+| AI | Spring AI 2.0.1、OpenAI 兼容接口 |
+| 内容处理 | Apache PDFBox、Apache POI、jsoup |
+| 前端 | HTML、CSS、原生 JavaScript |
+| 测试 | JUnit 5、Mockito、MockMvc |
 
-## 模块划分
+## 快速开始
 
-| 模块 | 职责 |
-|---|---|
-| 项目骨架 | 基础配置、环境变量、健康检查 |
-| 数据模型 | 资料元数据建模与 PostgreSQL 持久化 |
-| 文档解析 | PDF、TXT、Markdown、DOCX 正文提取 |
-| 网页抓取 | 安全访问公开网页并提取正文 |
-| 文本切分 | 段落切分、重叠内容和超长文本处理 |
-| 向量入库 | Embedding 生成、保存、更新和删除 |
-| 资料管理 | 文件、笔记、网页的增删改查 |
-| RAG 问答 | 检索、过滤、查询改写、回答和溯源 |
-| 前端页面 | 资料管理、问答和来源展示 |
-| 测试与交付 | 自动化测试、运行文档和 CI |
+### 1. 准备环境
 
-## 计划接口
-
-| 方法 | 路径 | 说明 |
-|---|---|---|
-| `GET` | `/api/health` | 应用健康检查 |
-| `POST` | `/api/documents` | 上传文件 |
-| `POST` | `/api/documents/notes` | 创建笔记 |
-| `POST` | `/api/documents/links` | 收藏网页 |
-| `GET` | `/api/documents` | 查询资料列表 |
-| `PUT` | `/api/documents/{id}` | 更新资料 |
-| `DELETE` | `/api/documents/{id}` | 删除资料 |
-| `POST` | `/api/chat` | 知识库问答 |
-
-以上接口目前属于设计方案，将按照模块 Issue 逐步实现。
-
-## 项目范围
-
-当前版本计划包含：
-
-- 单用户知识库
-- 文件、笔记和网页收录
-- 资料管理
-- RAG 问答与来源追踪
-- 简单 Web 前端
-
-当前版本暂不包含：
-
-- 用户注册和权限系统
-- 多租户
-- OCR
-- 图片、音频和视频解析
-- 文档版本历史
-- 大规模异步任务
-- 移动端应用
-
-## 开发流程
-
-项目采用 Issue 驱动方式开发：
-
-1. 在总 Issue 中定义产品范围与模块。
-2. 每个模块建立独立子 Issue。
-3. 每个功能从 `main` 创建独立分支。
-4. 完成功能和测试后创建 PR。
-5. PR 使用 `Closes #Issue编号` 关联对应 Issue。
-6. PR 通过检查后合并到 `main`。
-
-总功能设计记录在 GitHub Issue `#1`。
-
-## 文档
-
-- [用户故事](docs/USER_STORIES.md)
-
-后续将继续补充：
-
-- 项目设计文档
-- 模块拆分文档
-- API 文档
-- 运行说明
-
-## 本地运行
-
-### 环境要求
-
-- JDK 17
+- JDK 17 或更高版本
 - Maven 3.9+
-- PostgreSQL
+- PostgreSQL 14+
+- 已安装 pgvector 的 PostgreSQL 实例
+- 一个支持 OpenAI 兼容接口的模型服务密钥
 
-### 创建数据库
+### 2. 创建数据库
 
 ```sql
 CREATE DATABASE personal_knowledge_base;
 ```
 
-连接到 `personal_knowledge_base` 数据库后，启用 pgvector 扩展：
+连接到该数据库后启用扩展：
 
 ```sql
 CREATE EXTENSION IF NOT EXISTS vector;
 ```
 
-检查扩展是否启用成功：
+### 3. 配置环境
 
-```sql
-SELECT extname, extversion
-FROM pg_extension
-WHERE extname = 'vector';
-```
-
-### 配置环境变量
-
-复制示例配置：
+在项目根目录复制示例文件：
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-修改 `.env` 中的数据库密码和 SiliconFlow API 密钥：
+编辑 `.env`，填写本机数据库信息和模型服务密钥。`.env` 已被 Git 忽略，禁止提交真实密码和 API Key。
 
-```properties
-DB_URL=jdbc:postgresql://localhost:5432/personal_knowledge_base
-DB_USERNAME=postgres
-DB_PASSWORD=replace-with-your-database-password
-
-SILICONFLOW_API_KEY=replace-with-your-api-key
-SILICONFLOW_BASE_URL=https://api.siliconflow.cn/v1
-EMBEDDING_MODEL=BAAI/bge-m3
-EMBEDDING_DIMENSIONS=1024
-```
-
-`.env` 已被 Git 忽略，不要把真实密码提交到仓库。
-
-应用启动时会初始化 `vector_store` 表。单元测试会使用 Mock Embedding 模型，
-不会向真实模型服务发送请求。
-
-### 启动应用
+### 4. 启动应用
 
 ```powershell
 mvn spring-boot:run
 ```
 
-### 健康检查
+启动后访问：
 
-访问：
+- 资料管理页面：<http://localhost:8080/>
+- 知识问答页面：<http://localhost:8080/chat.html>
+- 健康检查：<http://localhost:8080/api/health>
 
-```text
-http://localhost:8080/api/health
+更完整的数据库、环境变量、测试、打包和故障排查说明见 [运行说明](docs/RUNNING.md)。
+
+## API 概览
+
+| 方法 | 路径 | 功能 |
+|---|---|---|
+| `GET` | `/api/health` | 健康检查 |
+| `POST` | `/api/documents` | 上传文件 |
+| `POST` | `/api/documents/notes` | 创建笔记 |
+| `POST` | `/api/documents/links` | 抓取并收藏网页 |
+| `GET` | `/api/documents` | 查询资料列表 |
+| `PUT` | `/api/documents/{id}` | 更新资料正文和向量 |
+| `PUT` | `/api/documents/{id}` | 使用新文件替换资料，提交 multipart/form-data |
+| `DELETE` | `/api/documents/{id}` | 删除资料及其向量 |
+| `POST` | `/api/chat` | 基于知识库进行问答 |
+
+问答示例：
+
+```powershell
+Invoke-RestMethod -Method Post `
+  -Uri http://localhost:8080/api/chat `
+  -ContentType "application/json" `
+  -Body '{"question":"我的资料中介绍了哪些文件格式？"}'
 ```
 
-预期响应：
+## 测试与打包
 
-```json
-{
-  "status": "UP",
-  "application": "personal-knowledge-base"
-}
-```
-
-### 运行测试
+运行全部测试：
 
 ```powershell
 mvn test
 ```
+
+生成可运行 JAR：
+
+```powershell
+mvn package
+java -jar target/personal-knowledge-base-0.0.1-SNAPSHOT.jar
+```
+
+测试使用 Mock 替代 EmbeddingModel 和 ChatModel，不会调用真实模型；Spring 上下文测试会连接本地 PostgreSQL，因此测试前需要启动数据库并启用 `vector` 扩展。
+
+## 项目结构
+
+```text
+src/main/java/com/ithwx/personalknowledgebase
+├── controller/     HTTP 接口
+├── dto/            请求与响应模型
+├── entity/         JPA 实体
+├── exception/      统一异常处理
+├── repository/     数据访问
+└── service/        解析、切分、入库、检索与回答
+
+src/main/resources
+├── application.yaml
+└── static/         资料管理与问答页面
+```
+
+详细类职责和模块依赖见 [模块拆分文档](docs/MODULES.md)。
+
+## 设计与文档
+
+- [项目设计文档](docs/PROJECT_DESIGN.md)
+- [模块拆分文档](docs/MODULES.md)
+- [运行说明](docs/RUNNING.md)
+- [用户故事](docs/USER_STORIES.md)
+- [MIT License](LICENSE)
+
+## 安全说明
+
+- `.env` 只保存在本地，仓库仅提交无真实凭据的 `.env.example`。
+- 网页抓取只接受公开 HTTP/HTTPS 地址，并拒绝本机、内网、链路本地和组播地址。
+- 前端使用文本节点展示模型回答和来源，避免把模型内容直接注入 HTML。
+- 未知服务器异常只返回通用信息，不向客户端泄露堆栈和内部配置。
+- 本项目是单用户学习项目，尚未实现登录、授权和多用户数据隔离，不应直接作为公网多用户服务部署。
+
+## 开发流程
+
+项目采用 Issue 驱动开发：总 Issue 描述完整范围，模块子 Issue 对应独立分支，每个 PR 使用 `Closes #Issue编号` 建立关联，通过检查后再合并到 `main`。
+
+项目总任务记录在 GitHub Issue `#1`。
+
+## License
+
+本项目使用 [MIT License](LICENSE)。
