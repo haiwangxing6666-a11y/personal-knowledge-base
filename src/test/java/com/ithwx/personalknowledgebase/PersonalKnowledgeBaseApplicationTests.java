@@ -1,5 +1,6 @@
 package com.ithwx.personalknowledgebase;
 
+import com.ithwx.personalknowledgebase.controller.ChatController;
 import com.ithwx.personalknowledgebase.repository.DocumentRepository;
 import com.ithwx.personalknowledgebase.service.DocumentManagementService;
 import com.ithwx.personalknowledgebase.service.KnowledgeIngestionService;
@@ -47,6 +48,9 @@ class PersonalKnowledgeBaseApplicationTests {
     private RagAnswerService ragAnswerService;
 
     @Autowired
+    private ChatController chatController;
+
+    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     @MockitoBean
@@ -66,6 +70,7 @@ class PersonalKnowledgeBaseApplicationTests {
         assertNotNull(questionRewriteService);
         assertNotNull(twoStageRetrievalService);
         assertNotNull(ragAnswerService);
+        assertNotNull(chatController);
         assertNotNull(chatModel);
     }
 
