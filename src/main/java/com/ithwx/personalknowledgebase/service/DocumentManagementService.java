@@ -2,6 +2,7 @@ package com.ithwx.personalknowledgebase.service;
 
 import com.ithwx.personalknowledgebase.dto.WebPage;
 import com.ithwx.personalknowledgebase.entity.DocumentEntity;
+import com.ithwx.personalknowledgebase.exception.ResourceNotFoundException;
 import com.ithwx.personalknowledgebase.repository.DocumentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -113,7 +114,7 @@ public class DocumentManagementService {
 
     private DocumentEntity requireDocument(Long id) {
         return documentRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("资料不存在：" + id));
+                .orElseThrow(() -> new ResourceNotFoundException("资料不存在：" + id));
     }
 
     private String resolveFileName(String originalFileName) {
