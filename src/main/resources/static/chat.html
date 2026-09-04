@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Personal Knowledge Base 知识库问答页面">
+    <title>知识问答 · 知屿</title>
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body class="chat-body">
+<div class="app-shell chat-shell">
+    <header class="topbar">
+        <a class="brand" href="/" aria-label="知屿首页">
+            <span class="brand-mark" aria-hidden="true">知</span>
+            <span>
+                <strong>知屿</strong>
+                <small>PERSONAL KNOWLEDGE BASE</small>
+            </span>
+        </a>
+        <nav class="nav-tabs" aria-label="主要导航">
+            <a class="nav-link" href="/">资料管理</a>
+            <a class="nav-link active" href="/chat.html">知识问答</a>
+        </nav>
+        <div class="service-state" id="service-state" title="后端服务状态">
+            <span class="status-dot"></span>
+            <span id="service-state-text">正在连接</span>
+        </div>
+    </header>
+
+    <main class="chat-layout">
+        <aside class="chat-sidebar">
+            <div class="sidebar-heading">
+                <p class="eyebrow">ASK YOUR LIBRARY</p>
+                <h1>与知识<br>重新相遇。</h1>
+                <p>回答只来自你的资料，并附上可以追溯的来源。</p>
+            </div>
+
+            <div class="sidebar-note">
+                <span aria-hidden="true">◎</span>
+                <div>
+                    <strong>基于证据回答</strong>
+                    <p>找不到可靠内容时，知屿会明确拒答，不会凭空编造。</p>
+                </div>
+            </div>
+
+            <div class="suggestions">
+                <span>可以这样问</span>
+                <button type="button" data-question="总结一下我知识库中的主要内容">总结知识库的主要内容</button>
+                <button type="button" data-question="我的资料中提到了哪些重要概念？">资料中有哪些重要概念？</button>
+                <button type="button" data-question="根据现有资料给我列出一份学习清单">生成一份学习清单</button>
+            </div>
+
+            <a class="back-library" href="/">← 返回资料管理</a>
+        </aside>
+
+        <section class="chat-console" aria-labelledby="chat-title">
+            <div class="chat-console-head">
+                <div>
+                    <span class="chat-avatar" aria-hidden="true">知</span>
+                    <div>
+                        <h2 id="chat-title">知识问答</h2>
+                        <p>两阶段检索 · 来源追踪 · 无依据拒答</p>
+                    </div>
+                </div>
+                <button class="clear-chat" id="clear-chat" type="button">清空对话</button>
+            </div>
+
+            <div class="messages" id="messages" aria-live="polite">
+                <div class="chat-empty" id="chat-empty">
+                    <span class="empty-orbit" aria-hidden="true"><i>知</i></span>
+                    <h2>向你的知识岛提问</h2>
+                    <p>我会先检索已有资料，必要时改写问题再次查找，最后给出带来源的回答。</p>
+                </div>
+            </div>
+
+            <form class="chat-composer" id="chat-form">
+                <label class="sr-only" for="question-input">请输入问题</label>
+                <textarea id="question-input" maxlength="1000" rows="1" placeholder="输入关于知识库的问题……" required></textarea>
+                <div class="composer-footer">
+                    <span><kbd>Enter</kbd> 发送 · <kbd>Shift + Enter</kbd> 换行</span>
+                    <span class="question-count"><b id="question-count">0</b>/1000</span>
+                    <button class="send-button" id="send-button" type="submit" aria-label="发送问题">
+                        <span>发送</span><i aria-hidden="true">↑</i>
+                    </button>
+                </div>
+            </form>
+        </section>
+    </main>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="/js/chat.js" defer></script>
+</body>
+</html>
