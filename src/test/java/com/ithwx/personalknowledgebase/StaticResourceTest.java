@@ -5,6 +5,7 @@ import org.springframework.core.io.ClassPathResource;
 
 import java.nio.charset.StandardCharsets;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class StaticResourceTest {
@@ -36,6 +37,12 @@ class StaticResourceTest {
 
         assertTrue(page.contains("向你的知识岛提问"));
         assertTrue(page.contains("/js/chat.js"));
+        assertTrue(page.contains("请替换【】中的内容"));
+        assertTrue(page.contains("【资料中的具体概念】是什么？"));
+        assertTrue(page.contains(">【资料中的具体概念】是什么？</button>"));
+        assertTrue(page.contains(">【概念 A】和【概念 B】有什么区别？</button>"));
+        assertTrue(page.contains(">根据资料说明【一个具体问题】</button>"));
+        assertFalse(page.contains("总结知识库的主要内容"));
         assertTrue(script.contains("/api/chat"));
         assertTrue(script.contains("secondSearchExecuted"));
         assertTrue(script.contains("sourceUrl"));
