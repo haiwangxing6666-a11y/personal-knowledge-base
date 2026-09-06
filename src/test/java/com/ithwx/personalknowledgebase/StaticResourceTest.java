@@ -15,6 +15,7 @@ class StaticResourceTest {
         String script = read("static/js/app.js");
 
         assertTrue(css.contains("@media (max-width: 600px)"));
+        assertTrue(css.contains(".library-state[hidden]"));
         assertTrue(script.contains("/api/documents/notes"));
         assertTrue(script.contains("/api/documents/links"));
         assertTrue(script.contains("method: \"DELETE\""));

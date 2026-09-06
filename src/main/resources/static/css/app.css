@@ -528,6 +528,10 @@ button:disabled {
     font-size: 13px;
 }
 
+.library-state[hidden] {
+    display: none;
+}
+
 .spinner {
     width: 20px;
     height: 20px;
