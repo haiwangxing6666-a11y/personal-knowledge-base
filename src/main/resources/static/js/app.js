@@ -8,6 +8,7 @@ const API = {
 const state = {
     documents: [],
     pendingDelete: null,
+    pendingEdit: null,
     toastTimer: null
 };
 
@@ -32,6 +33,13 @@ const elements = {
     deleteDialog: document.querySelector("#delete-dialog"),
     deleteName: document.querySelector("#delete-name"),
     confirmDelete: document.querySelector("#confirm-delete"),
+    editNoteDialog: document.querySelector("#edit-note-dialog"),
+    editNoteForm: document.querySelector("#edit-note-form"),
+    editNoteTitle: document.querySelector("#edit-note-title"),
+    editNoteContent: document.querySelector("#edit-note-content"),
+    editNoteHint: document.querySelector("#edit-note-hint"),
+    cancelNoteEdit: document.querySelector("#cancel-note-edit"),
+    saveNoteEdit: document.querySelector("#save-note-edit"),
     toast: document.querySelector("#toast")
 };
 
@@ -50,9 +58,49 @@ function init() {
     bindForms();
     bindFileDrop();
     bindDeleteDialog();
+    bindNoteEditor();
     elements.refreshButton.addEventListener("click", loadDocuments);
     loadHealth();
     loadDocuments();
+}
+
+function bindNoteEditor() {
+    elements.cancelNoteEdit.addEventListener("click", () => {
+        elements.editNoteDialog.close();
+    });
+
+    elements.editNoteDialog.addEventListener("close", () => {
+        state.pendingEdit = null;
+        elements.editNoteForm.reset();
+    });
+
+    elements.editNoteForm.addEventListener("submit", async event => {
+        event.preventDefault();
+        if (!state.pendingEdit) return;
+
+        const note = state.pendingEdit;
+        const data = new FormData(elements.editNoteForm);
+        try {
+            elements.saveNoteEdit.disabled = true;
+            elements.saveNoteEdit.textContent = "保存中……";
+            await request(`${API.documents}/${note.id}`, {
+                method: "PUT",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    name: data.get("name"),
+                    content: data.get("content")
+                })
+            });
+            elements.editNoteDialog.close();
+            showToast("笔记已更新并重新生成向量索引", "success");
+            await loadDocuments();
+        } catch (error) {
+            showToast(error.message, "error");
+        } finally {
+            elements.saveNoteEdit.disabled = false;
+            elements.saveNoteEdit.textContent = "保存修改";
+        }
+    });
 }
 
 function bindTabs() {
@@ -223,10 +271,14 @@ function renderDocuments() {
         const card = document.createElement("article");
         card.className = "document-card";
         card.style.setProperty("--type-color", type.color);
+        const editable = (item.fileType || "").toLowerCase() === "note";
         card.innerHTML = `
             <div class="document-card-head">
                 <span class="type-badge">${escapeHtml(type.label)}</span>
-                <button class="delete-button" type="button" aria-label="删除 ${escapeHtml(item.name)}" title="删除资料">×</button>
+                <div class="document-actions">
+                    ${editable ? `<button class="edit-button" type="button" aria-label="修改 ${escapeHtml(item.name)}" title="修改笔记">✎</button>` : ""}
+                    <button class="delete-button" type="button" aria-label="删除 ${escapeHtml(item.name)}" title="删除资料">×</button>
+                </div>
             </div>
             <h3 title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</h3>
             ${item.sourceUrl ? `<p class="document-url" title="${escapeHtml(item.sourceUrl)}">${escapeHtml(item.sourceUrl)}</p>` : ""}
@@ -236,8 +288,27 @@ function renderDocuments() {
                 <time>${formatDate(item.uploadTime)}</time>
             </div>
         `;
+        const editButton = card.querySelector(".edit-button");
+        if (editButton) {
+            editButton.addEventListener("click", () => openNoteEditor(item));
+        }
         card.querySelector(".delete-button").addEventListener("click", () => openDeleteDialog(item));
         elements.documentList.append(card);
+    }
+}
+
+async function openNoteEditor(item) {
+    try {
+        const detail = await request(`${API.documents}/${item.id}`);
+        state.pendingEdit = detail;
+        elements.editNoteTitle.value = detail.name || "";
+        elements.editNoteContent.value = detail.content || "";
+        elements.editNoteHint.textContent = detail.content == null
+            ? "这条笔记创建于正文存储功能上线前，请重新输入完整正文。"
+            : "保存后会重新切分正文并更新向量索引。";
+        elements.editNoteDialog.showModal();
+    } catch (error) {
+        showToast(error.message, "error");
     }
 }
 

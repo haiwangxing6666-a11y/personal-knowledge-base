@@ -76,6 +76,10 @@ public class DocumentManagementService {
         return documentRepository.findAllByOrderByUploadTimeDesc();
     }
 
+    public DocumentEntity get(Long id) {
+        return requireDocument(id);
+    }
+
     public DocumentEntity update(Long id, String name, String content) {
         DocumentEntity entity = requireDocument(id);
         return knowledgeIngestionService.replace(

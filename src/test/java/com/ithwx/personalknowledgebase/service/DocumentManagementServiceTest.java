@@ -140,6 +140,15 @@ class DocumentManagementServiceTest {
     }
 
     @Test
+    void shouldReturnDocumentDetail() {
+        DocumentEntity expected = document(2L, "学习笔记", "note");
+        expected.setContent("笔记正文");
+        when(documentRepository.findById(2L)).thenReturn(Optional.of(expected));
+
+        assertSame(expected, service.get(2L));
+    }
+
+    @Test
     void shouldUpdateDocumentAndPreserveSourceInformation() {
         DocumentEntity existing = document(3L, "旧网页", "web");
         existing.setSourceUrl("https://example.com/old");

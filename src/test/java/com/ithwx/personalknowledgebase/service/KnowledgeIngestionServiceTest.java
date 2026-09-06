@@ -78,6 +78,7 @@ class KnowledgeIngestionServiceTest {
         assertEquals("Spring 学习笔记", result.getName());
         assertEquals("note", result.getFileType());
         assertEquals("https://example.com/note", result.getSourceUrl());
+        assertEquals("第一段\n\n第二段", result.getContent());
         assertEquals("READY", result.getStatus());
         assertEquals(2, result.getChunkCount());
         assertNotNull(result.getContentHash());
@@ -162,6 +163,7 @@ class KnowledgeIngestionServiceTest {
 
         assertEquals(42L, result.getId());
         assertEquals("新名称", result.getName());
+        assertEquals("更新后的正文", result.getContent());
         assertEquals("READY", result.getStatus());
         assertEquals(2, result.getChunkCount());
         assertNotEquals("old-hash", result.getContentHash());

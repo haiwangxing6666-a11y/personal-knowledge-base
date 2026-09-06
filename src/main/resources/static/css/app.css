@@ -471,11 +471,31 @@ main {
 .primary-button,
 .ghost-button,
 .danger-button,
+.edit-button,
 .delete-button {
     border: 0;
     border-radius: 10px;
     font-weight: 700;
     transition: transform .16s ease, background .16s ease, opacity .16s ease;
+}
+
+.document-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.edit-button {
+    width: 30px;
+    height: 30px;
+    color: #738391;
+    background: transparent;
+    font-size: 15px;
+}
+
+.edit-button:hover {
+    color: var(--primary);
+    background: #e8f4f6;
 }
 
 .primary-button {
@@ -768,6 +788,15 @@ footer {
     margin: 12px 0 24px;
     color: var(--muted);
     font-size: 13px;
+}
+
+.edit-dialog form {
+    text-align: left;
+}
+
+.edit-dialog h2,
+.edit-dialog > form > p {
+    text-align: center;
 }
 
 .dialog-actions {
