@@ -472,6 +472,7 @@ main {
 .ghost-button,
 .danger-button,
 .edit-button,
+.replace-button,
 .delete-button {
     border: 0;
     border-radius: 10px;
@@ -485,7 +486,8 @@ main {
     gap: 4px;
 }
 
-.edit-button {
+.edit-button,
+.replace-button {
     width: 30px;
     height: 30px;
     color: #738391;
@@ -493,9 +495,15 @@ main {
     font-size: 15px;
 }
 
-.edit-button:hover {
+.edit-button:hover,
+.replace-button:hover {
     color: var(--primary);
     background: #e8f4f6;
+}
+
+.edit-dialog input[type="file"] {
+    height: auto;
+    padding: 10px;
 }
 
 .primary-button {

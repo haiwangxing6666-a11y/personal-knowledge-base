@@ -185,6 +185,21 @@
     </form>
 </dialog>
 
+<dialog class="confirm-dialog edit-dialog" id="replace-file-dialog">
+    <form id="replace-file-form" class="stacked-form">
+        <h2>替换文件</h2>
+        <p>为“<strong id="replace-document-name"></strong>”选择一个新文件，原有向量索引会被同步替换。</p>
+        <label>
+            <span>新文件</span>
+            <input id="replacement-file-input" name="file" type="file" accept=".txt,.md,.markdown,.pdf,.docx" required>
+        </label>
+        <div class="dialog-actions">
+            <button class="ghost-button" id="cancel-file-replacement" type="button">取消</button>
+            <button class="primary-button" id="save-file-replacement" type="submit">确认替换</button>
+        </div>
+    </form>
+</dialog>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="/js/app.js" defer></script>
 </body>

@@ -22,7 +22,10 @@ class StaticResourceTest {
         assertTrue(script.contains("method: \"DELETE\""));
         assertTrue(script.contains("method: \"PUT\""));
         assertTrue(script.contains("openNoteEditor"));
+        assertTrue(script.contains("openFileReplacement"));
         assertTrue(page.contains("id=\"edit-note-dialog\""));
+        assertTrue(page.contains("id=\"replace-file-dialog\""));
+        assertTrue(page.contains("accept=\".txt,.md,.markdown,.pdf,.docx\""));
         assertTrue(script.contains("fieldErrors"));
     }
 

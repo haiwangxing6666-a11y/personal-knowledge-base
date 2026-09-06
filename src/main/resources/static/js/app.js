@@ -9,6 +9,7 @@ const state = {
     documents: [],
     pendingDelete: null,
     pendingEdit: null,
+    pendingReplace: null,
     toastTimer: null
 };
 
@@ -40,6 +41,12 @@ const elements = {
     editNoteHint: document.querySelector("#edit-note-hint"),
     cancelNoteEdit: document.querySelector("#cancel-note-edit"),
     saveNoteEdit: document.querySelector("#save-note-edit"),
+    replaceFileDialog: document.querySelector("#replace-file-dialog"),
+    replaceFileForm: document.querySelector("#replace-file-form"),
+    replaceDocumentName: document.querySelector("#replace-document-name"),
+    replacementFileInput: document.querySelector("#replacement-file-input"),
+    cancelFileReplacement: document.querySelector("#cancel-file-replacement"),
+    saveFileReplacement: document.querySelector("#save-file-replacement"),
     toast: document.querySelector("#toast")
 };
 
@@ -59,9 +66,52 @@ function init() {
     bindFileDrop();
     bindDeleteDialog();
     bindNoteEditor();
+    bindFileReplacement();
     elements.refreshButton.addEventListener("click", loadDocuments);
     loadHealth();
     loadDocuments();
+}
+
+function bindFileReplacement() {
+    elements.cancelFileReplacement.addEventListener("click", () => {
+        elements.replaceFileDialog.close();
+    });
+
+    elements.replaceFileDialog.addEventListener("close", () => {
+        state.pendingReplace = null;
+        elements.replaceFileForm.reset();
+    });
+
+    elements.replaceFileForm.addEventListener("submit", async event => {
+        event.preventDefault();
+        if (!state.pendingReplace) return;
+
+        const documentToReplace = state.pendingReplace;
+        const file = elements.replacementFileInput.files[0];
+        if (!file) {
+            showToast("请先选择一个新文件", "error");
+            return;
+        }
+
+        const body = new FormData();
+        body.append("file", file);
+        try {
+            elements.saveFileReplacement.disabled = true;
+            elements.saveFileReplacement.textContent = "替换中……";
+            await request(`${API.documents}/${documentToReplace.id}`, {
+                method: "PUT",
+                body
+            });
+            elements.replaceFileDialog.close();
+            showToast("文件已替换并重新生成向量索引", "success");
+            await loadDocuments();
+        } catch (error) {
+            showToast(error.message, "error");
+        } finally {
+            elements.saveFileReplacement.disabled = false;
+            elements.saveFileReplacement.textContent = "确认替换";
+        }
+    });
 }
 
 function bindNoteEditor() {
@@ -271,12 +321,15 @@ function renderDocuments() {
         const card = document.createElement("article");
         card.className = "document-card";
         card.style.setProperty("--type-color", type.color);
-        const editable = (item.fileType || "").toLowerCase() === "note";
+        const fileType = (item.fileType || "").toLowerCase();
+        const editable = fileType === "note";
+        const replaceable = ["txt", "md", "markdown", "pdf", "docx"].includes(fileType);
         card.innerHTML = `
             <div class="document-card-head">
                 <span class="type-badge">${escapeHtml(type.label)}</span>
                 <div class="document-actions">
                     ${editable ? `<button class="edit-button" type="button" aria-label="修改 ${escapeHtml(item.name)}" title="修改笔记">✎</button>` : ""}
+                    ${replaceable ? `<button class="replace-button" type="button" aria-label="替换 ${escapeHtml(item.name)}" title="替换文件">↥</button>` : ""}
                     <button class="delete-button" type="button" aria-label="删除 ${escapeHtml(item.name)}" title="删除资料">×</button>
                 </div>
             </div>
@@ -292,9 +345,20 @@ function renderDocuments() {
         if (editButton) {
             editButton.addEventListener("click", () => openNoteEditor(item));
         }
+        const replaceButton = card.querySelector(".replace-button");
+        if (replaceButton) {
+            replaceButton.addEventListener("click", () => openFileReplacement(item));
+        }
         card.querySelector(".delete-button").addEventListener("click", () => openDeleteDialog(item));
         elements.documentList.append(card);
     }
+}
+
+function openFileReplacement(item) {
+    state.pendingReplace = item;
+    elements.replaceDocumentName.textContent = item.name;
+    elements.replaceFileForm.reset();
+    elements.replaceFileDialog.showModal();
 }
 
 async function openNoteEditor(item) {
