@@ -39,6 +39,9 @@ public class DocumentEntity {
     @Column(name = "content_hash", length = 64)
     private String contentHash;
 
+    @Column(columnDefinition = "TEXT")
+    private String content;
+
     @Column(name = "upload_time", nullable = false)
     private LocalDateTime uploadTime;
 

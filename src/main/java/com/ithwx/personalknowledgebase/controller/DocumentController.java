@@ -1,6 +1,7 @@
 package com.ithwx.personalknowledgebase.controller;
 
 import com.ithwx.personalknowledgebase.dto.DocumentResponse;
+import com.ithwx.personalknowledgebase.dto.DocumentDetailResponse;
 import com.ithwx.personalknowledgebase.dto.DocumentUpdateRequest;
 import com.ithwx.personalknowledgebase.dto.LinkCreateRequest;
 import com.ithwx.personalknowledgebase.dto.NoteCreateRequest;
@@ -60,6 +61,11 @@ public class DocumentController {
         return documentManagementService.list().stream()
                 .map(DocumentResponse::from)
                 .toList();
+    }
+
+    @GetMapping("/{id}")
+    public DocumentDetailResponse detail(@PathVariable Long id) {
+        return DocumentDetailResponse.from(documentManagementService.get(id));
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)

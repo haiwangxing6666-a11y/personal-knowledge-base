@@ -12,6 +12,7 @@ class StaticResourceTest {
     @Test
     void shouldProvideStylesAndDocumentManagementScript() throws Exception {
         String css = read("static/css/app.css");
+        String page = read("static/index.html");
         String script = read("static/js/app.js");
 
         assertTrue(css.contains("@media (max-width: 600px)"));
@@ -19,6 +20,9 @@ class StaticResourceTest {
         assertTrue(script.contains("/api/documents/notes"));
         assertTrue(script.contains("/api/documents/links"));
         assertTrue(script.contains("method: \"DELETE\""));
+        assertTrue(script.contains("method: \"PUT\""));
+        assertTrue(script.contains("openNoteEditor"));
+        assertTrue(page.contains("id=\"edit-note-dialog\""));
         assertTrue(script.contains("fieldErrors"));
     }
 

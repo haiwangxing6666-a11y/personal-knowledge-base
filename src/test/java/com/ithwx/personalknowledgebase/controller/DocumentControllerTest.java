@@ -121,6 +121,19 @@ class DocumentControllerTest {
     }
 
     @Test
+    void shouldGetDocumentDetailWithContent() throws Exception {
+        DocumentEntity note = document(2L, "学习笔记", "note", null);
+        note.setContent("笔记正文");
+        when(documentManagementService.get(2L)).thenReturn(note);
+
+        mockMvc.perform(get("/api/documents/{id}", 2L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(2))
+                .andExpect(jsonPath("$.name").value("学习笔记"))
+                .andExpect(jsonPath("$.content").value("笔记正文"));
+    }
+
+    @Test
     void shouldUpdateDocumentContent() throws Exception {
         when(documentManagementService.update(2L, "新名称", "新正文"))
                 .thenReturn(document(2L, "新名称", "note", null));

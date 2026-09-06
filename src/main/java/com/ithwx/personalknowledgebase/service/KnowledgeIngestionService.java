@@ -124,6 +124,7 @@ public class KnowledgeIngestionService {
                 normalizedName,
                 normalizedType,
                 normalizedUrl,
+                content,
                 sha256(content),
                 chunks
         );
@@ -136,6 +137,7 @@ public class KnowledgeIngestionService {
         entity.setName(prepared.name());
         entity.setFileType(prepared.sourceType());
         entity.setSourceUrl(prepared.sourceUrl().isEmpty() ? null : prepared.sourceUrl());
+        entity.setContent(prepared.content());
         entity.setContentHash(prepared.contentHash());
         entity.setStatus(STATUS_PROCESSING);
         entity.setChunkCount(0);
@@ -209,6 +211,7 @@ public class KnowledgeIngestionService {
             String name,
             String sourceType,
             String sourceUrl,
+            String content,
             String contentHash,
             List<String> chunks
     ) {

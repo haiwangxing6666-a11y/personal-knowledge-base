@@ -166,6 +166,25 @@
     </form>
 </dialog>
 
+<dialog class="confirm-dialog edit-dialog" id="edit-note-dialog">
+    <form id="edit-note-form" class="stacked-form">
+        <h2>修改笔记</h2>
+        <p id="edit-note-hint">保存后会重新切分正文并更新向量索引。</p>
+        <label>
+            <span>笔记标题</span>
+            <input id="edit-note-title" name="name" type="text" maxlength="255" required>
+        </label>
+        <label>
+            <span>笔记正文</span>
+            <textarea id="edit-note-content" name="content" rows="9" required></textarea>
+        </label>
+        <div class="dialog-actions">
+            <button class="ghost-button" id="cancel-note-edit" type="button">取消</button>
+            <button class="primary-button" id="save-note-edit" type="submit">保存修改</button>
+        </div>
+    </form>
+</dialog>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="/js/app.js" defer></script>
 </body>
