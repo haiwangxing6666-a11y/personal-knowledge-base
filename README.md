@@ -47,18 +47,19 @@ flowchart LR
 | 内容处理 | Apache PDFBox、Apache POI、jsoup |
 | 前端 | HTML、CSS、原生 JavaScript |
 | 测试 | JUnit 5、Mockito、MockMvc |
+| 部署 | Docker、Docker Compose |
 
 ## 快速开始
 
 ### 1. 准备环境
 
-- JDK 17 或更高版本
-- Maven 3.9+
-- PostgreSQL 14+
-- 已安装 pgvector 的 PostgreSQL 实例
+- Docker 方式（推荐）：Docker Desktop，并启用 Docker Compose
+- 本地方式：JDK 17、Maven 3.9+、PostgreSQL 14+ 和 pgvector
 - 一个支持 OpenAI 兼容接口的模型服务密钥
 
-### 2. 创建数据库
+### 2. 创建本地数据库（仅本地启动）
+
+如果使用 Docker Compose，可以跳过本步骤，数据库和 `vector` 扩展会自动初始化。本地启动时执行：
 
 ```sql
 CREATE DATABASE personal_knowledge_base;
@@ -78,9 +79,9 @@ CREATE EXTENSION IF NOT EXISTS vector;
 Copy-Item .env.example .env
 ```
 
-编辑 `.env`，填写本机数据库信息和模型服务密钥。`.env` 已被 Git 忽略，禁止提交真实密码和 API Key。
+编辑 `.env`，填写数据库凭据和模型服务密钥。本地启动需要正确配置 `DB_URL`；Docker Compose 会使用同一文件中的数据库用户名、密码和模型配置，并在容器内自动设置数据库地址。`.env` 已被 Git 忽略，禁止提交真实密码和 API Key。
 
-### 4. 启动应用
+### 4. 本地启动应用
 
 ```powershell
 mvn spring-boot:run
@@ -91,6 +92,36 @@ mvn spring-boot:run
 - 资料管理页面：<http://localhost:8080/>
 - 知识问答页面：<http://localhost:8080/chat.html>
 - 健康检查：<http://localhost:8080/api/health>
+
+### 5. 使用 Docker Compose 启动
+
+确保 Docker Desktop 已启动，并已按照前面的步骤创建和配置 `.env`。在项目根目录执行：
+
+```powershell
+docker compose up --build -d
+```
+
+查看容器状态：
+
+```powershell
+docker compose ps
+```
+
+应用容器应显示为 `Up`，数据库容器应显示为 `healthy`。启动后的页面和接口地址仍为 `http://localhost:8080`，Docker PostgreSQL 可从 Windows 主机的 `localhost:5433` 访问。
+
+查看应用日志：
+
+```powershell
+docker compose logs -f app
+```
+
+停止容器但保留数据库资料：
+
+```powershell
+docker compose down
+```
+
+数据库资料保存在 Docker Volume 中。不要随意执行 `docker compose down -v`，因为 `-v` 会同时删除数据库数据卷。
 
 更完整的数据库、环境变量、测试、打包和故障排查说明见 [运行说明](docs/RUNNING.md)。
 
@@ -148,6 +179,10 @@ src/main/java/com/ithwx/personalknowledgebase
 src/main/resources
 ├── application.yaml
 └── static/         资料管理与问答页面
+
+Dockerfile                         Spring Boot 镜像构建
+compose.yaml                       应用与 pgvector 容器编排
+docker/postgres/init.sql           自动启用 vector 扩展
 ```
 
 详细类职责和模块依赖见 [模块拆分文档](docs/MODULES.md)。
