@@ -45,7 +45,7 @@ public class KnowledgeIngestionService {
             String sourceUrl,
             String content
     ) {
-        PreparedContent prepared = prepare(name, sourceType, sourceUrl, content);
+        PreparedContent prepared = prepare(name, sourceType, sourceUrl, content, null);
 
         DocumentEntity entity = new DocumentEntity();
         applyPreparedContent(entity, prepared);
@@ -65,7 +65,13 @@ public class KnowledgeIngestionService {
             throw new IllegalArgumentException("待更新资料不能为空");
         }
 
-        PreparedContent prepared = prepare(name, sourceType, sourceUrl, content);
+        PreparedContent prepared = prepare(
+                name,
+                sourceType,
+                sourceUrl,
+                content,
+                entity.getId()
+        );
         applyPreparedContent(entity, prepared);
         documentRepository.save(entity);
 
@@ -104,7 +110,8 @@ public class KnowledgeIngestionService {
             String name,
             String sourceType,
             String sourceUrl,
-            String content
+            String content,
+            Long currentDocumentId
     ) {
         String normalizedName = requireText(name, "资料名称", 255);
         String normalizedType = requireText(sourceType, "资料类型", 32)
@@ -114,6 +121,9 @@ public class KnowledgeIngestionService {
         if (content == null || content.isBlank()) {
             throw new IllegalArgumentException("资料正文不能为空");
         }
+
+        String contentHash = sha256(content);
+        ensureContentIsUnique(contentHash, currentDocumentId);
 
         List<String> chunks = chunkingService.chunk(content);
         if (chunks.isEmpty()) {
@@ -125,9 +135,22 @@ public class KnowledgeIngestionService {
                 normalizedType,
                 normalizedUrl,
                 content,
-                sha256(content),
+                contentHash,
                 chunks
         );
+    }
+
+    private void ensureContentIsUnique(String contentHash, Long currentDocumentId) {
+        boolean duplicateExists = currentDocumentId == null
+                ? documentRepository.existsByContentHash(contentHash)
+                : documentRepository.existsByContentHashAndIdNot(
+                        contentHash,
+                        currentDocumentId
+                );
+
+        if (duplicateExists) {
+            throw new IllegalArgumentException("相同内容的资料已存在");
+        }
     }
 
     private void applyPreparedContent(

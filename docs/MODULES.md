@@ -117,6 +117,7 @@ DTO 使用 Java Record 表达不可变的数据载体。包含集合的 Record �
 ```text
 校验并标准化输入
 → 计算 SHA-256
+→ 根据 contentHash 拒绝重复正文
 → 切分正文
 → 保存 PROCESSING 元数据
 → 构建带 metadata 的 Spring AI Document

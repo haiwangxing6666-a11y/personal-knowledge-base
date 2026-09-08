@@ -103,6 +103,22 @@ class KnowledgeIngestionServiceTest {
     }
 
     @Test
+    void shouldRejectDuplicateContentBeforeChunkingAndSaving() {
+        when(documentRepository.existsByContentHash(any(String.class)))
+                .thenReturn(true);
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> service.ingest("重复资料", "txt", null, "完全相同的正文")
+        );
+
+        assertEquals("相同内容的资料已存在", exception.getMessage());
+        verify(documentRepository).existsByContentHash(any(String.class));
+        verify(documentRepository, never()).save(any(DocumentEntity.class));
+        verifyNoInteractions(chunkingService, vectorStore);
+    }
+
+    @Test
     void shouldMarkDocumentAsFailedWhenVectorStoreFails() {
         stubRepositorySave();
         when(chunkingService.chunk("有效正文"))
@@ -178,6 +194,76 @@ class KnowledgeIngestionServiceTest {
         assertEquals("42", documents.get(0).getMetadata().get("documentId"));
         assertEquals("新名称", documents.get(0).getMetadata().get("documentName"));
         verify(documentRepository, times(2)).save(entity);
+    }
+
+    @Test
+    void shouldRejectReplacingWithAnotherDocumentsContent() {
+        DocumentEntity entity = new DocumentEntity();
+        entity.setId(42L);
+        entity.setName("原资料");
+        entity.setFileType("note");
+        entity.setContent("原正文");
+        entity.setContentHash("old-hash");
+        entity.setStatus("READY");
+        entity.setChunkCount(1);
+        when(documentRepository.existsByContentHashAndIdNot(
+                any(String.class),
+                org.mockito.ArgumentMatchers.eq(42L)
+        )).thenReturn(true);
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> service.replace(
+                        entity,
+                        "新名称",
+                        "note",
+                        null,
+                        "另一条资料已经使用的正文"
+                )
+        );
+
+        assertEquals("相同内容的资料已存在", exception.getMessage());
+        assertEquals("原资料", entity.getName());
+        assertEquals("原正文", entity.getContent());
+        assertEquals("old-hash", entity.getContentHash());
+        verify(documentRepository).existsByContentHashAndIdNot(
+                any(String.class),
+                org.mockito.ArgumentMatchers.eq(42L)
+        );
+        verify(documentRepository, never()).save(any(DocumentEntity.class));
+        verifyNoInteractions(chunkingService, vectorStore);
+    }
+
+    @Test
+    void shouldAllowReplacingDocumentWhileKeepingItsOwnContent() {
+        stubRepositorySave();
+        DocumentEntity entity = new DocumentEntity();
+        entity.setId(42L);
+        entity.setName("原名称");
+        entity.setFileType("note");
+        entity.setContent("保持不变的正文");
+        entity.setStatus("READY");
+        entity.setChunkCount(1);
+        when(chunkingService.chunk("保持不变的正文"))
+                .thenReturn(List.of("保持不变的正文"));
+
+        DocumentEntity result = service.replace(
+                entity,
+                "修改后的名称",
+                "note",
+                null,
+                "保持不变的正文"
+        );
+
+        assertEquals("修改后的名称", result.getName());
+        assertEquals("保持不变的正文", result.getContent());
+        assertEquals("READY", result.getStatus());
+        verify(documentRepository).existsByContentHashAndIdNot(
+                any(String.class),
+                org.mockito.ArgumentMatchers.eq(42L)
+        );
+        verify(vectorStore).delete(any(Filter.Expression.class));
+        verify(vectorStore).add(anyList());
     }
 
     @Test
