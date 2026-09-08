@@ -14,6 +14,7 @@
 - 更新和删除资料时保持关系数据与向量数据同步。
 - 提供两阶段检索、来源追踪和无依据拒答。
 - 提供无需额外构建工具的 Web 使用界面。
+- 支持使用 Docker Compose 一键启动应用与 pgvector 数据库。
 
 ### 1.2 当前不包含
 
@@ -46,6 +47,20 @@ flowchart TB
 - Repository：通过 JPA 管理 `document` 元数据。
 - VectorStore：通过 Spring AI 管理 `vector_store` 文本、元数据和向量。
 - 前端：调用 API 并展示资料、回答、来源和错误信息。
+
+### 2.1 容器部署结构
+
+```mermaid
+flowchart LR
+    B[Windows 浏览器] -->|localhost:8080| A[app 容器<br/>Spring Boot :8080]
+    A -->|db:5432| D[db 容器<br/>PostgreSQL + pgvector]
+    C[DataGrip / psql] -->|localhost:5433| D
+    D --> V[(Docker Volume<br/>postgres-data)]
+```
+
+`compose.yaml` 编排 `app` 和 `db` 两个服务。数据库健康检查通过后应用容器才会启动，避免应用在 PostgreSQL 尚未就绪时连接失败。应用通过 Compose 内部网络和服务名 `db` 访问数据库，Windows 主机通过端口映射访问页面和数据库。
+
+Spring Boot 镜像采用多阶段构建：第一阶段使用 Maven 和 JDK 编译 JAR，第二阶段只使用 JRE 运行应用。PostgreSQL 数据写入命名数据卷，容器重新创建后数据仍然保留；初始化脚本只在首次创建空数据卷时启用 `vector` 扩展。
 
 ## 3. 资料入库设计
 
@@ -207,7 +222,7 @@ flowchart TD
 
 ## 7. 安全设计
 
-- 凭据：应用从本地 `.env` 读取配置，Git 只跟踪 `.env.example`。
+- 凭据：本地应用和 Docker Compose 都从 `.env` 读取配置，Git 只跟踪 `.env.example`；构建上下文通过 `.dockerignore` 排除 `.env`。
 - SSRF 防护：网页抓取限制 HTTP/HTTPS，解析 DNS 后拒绝本机、内网、链路本地、组播和 IPv6 Unique Local 地址；不自动跟随重定向。
 - 资源限制：网页抓取设置连接超时、请求超时和最大正文大小。
 - 错误脱敏：未知异常不会把堆栈和内部错误返回给浏览器。
@@ -228,5 +243,7 @@ flowchart TD
 - 使用单体架构：项目规模较小，便于学习、运行和调试。
 - 使用原生前端：避免额外 Node.js 工具链，应用打包后即可提供页面。
 - 元数据与向量共用 PostgreSQL：减少基础设施数量，并便于本地复现。
+- 使用 Compose 编排应用和数据库：负责人不需要手动安装 PostgreSQL 与 pgvector，也能复现运行环境。
+- 使用 Docker Volume 保存数据库：容器生命周期与资料数据分离，但执行 `docker compose down -v` 仍会主动删除数据卷。
 - 当前更新流程不是跨 JPA 与向量库的分布式事务；极端失败情况下可能需要人工重试。
 - 当前没有身份认证，只适合可信本地环境或受保护网络。
